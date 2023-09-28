@@ -1,20 +1,22 @@
 <template>
   <v-container class="fill-height" fluid>
     <v-row align="center" justify="center">
-      <v-col xs="12" sm="8" md="6" lg="4">
+      <v-col sm="9">
         <v-card>
           <v-card-text class="text-center">
             <div class="d-flex dense">
               <v-btn @click="startTimer">Start</v-btn>
-              <v-btn @click="resetTimer">Reset</v-btn>
-              <v-btn @click="startWork">Work</v-btn>
-              <v-btn @click="startShortBreak">Short Break</v-btn>
-              <v-btn @click="startLongBreak">Long Break</v-btn>
-              <v-btn icon @click="settingsDialog = true">
+              <v-btn class="ml-2" @click="stopTimer">Stop</v-btn>
+              <v-btn class="ml-2" @click="resetTimer">Reset</v-btn>
+              <v-btn class="ml-2" @click="startWork">Work</v-btn>
+              <v-btn class="ml-2" @click="startShortBreak">Short Break</v-btn>
+              <v-btn class="ml-2" @click="startLongBreak">Long Break</v-btn>
+              <v-btn class="ml-2" icon @click="settingsDialog = true">
                 <v-icon>mdi-cog</v-icon>
               </v-btn>
             </div>
-            <div class="display-3">{{ minutes.toString().padStart(2, '0') }}:{{ seconds.toString().padStart(2, '0') }}</div>
+            <div class="mt-5 display-3">{{ minutes.toString().padStart(2, '0') }}:{{ seconds.toString().padStart(2, '0') }}</div>
+            <v-textarea class="mt_5" v-model="comment" label="Current Task Comment"></v-textarea>
           </v-card-text>
         </v-card>
       </v-col>
@@ -54,6 +56,7 @@ export default {
       mode          : 'work',                                                // or 'shortBreak' or 'longBreak'
       settingsDialog: false,
       startTime     : null,
+      comment       : '',
     };
   },
   methods: {
@@ -79,6 +82,11 @@ export default {
         }
       }, 1000);
     },
+    stopTimer(){
+      if (this.timer) clearInterval(this.timer);
+      this.playSound();
+      this.notifyNotion('end');
+    },
     resetTimer() {
       if (this.timer) clearInterval(this.timer);
       this.minutes = 25;
@@ -93,7 +101,7 @@ export default {
         const endTimeISO   = endTime.toISOString();
 
         axios.post('/api/create-page', {
-          pageTitle: eventType,
+          pageTitle: this.comment,
           mode     : this.mode,
           parentId : this.databaseId,   // オプション。指定しない場合は .envファイルの NOTION_DATABASE_ID が使用されます。
           apiToken : this.apiKey,
